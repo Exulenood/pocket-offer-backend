@@ -24,6 +24,15 @@
       "@C:/Program": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    //added 2023-03-01:
+    "./stylelint.config.cjs",
+    //added 2023-03-01:
+    "./migrations/*.mjs"
+  ],
   "exclude": ["node_modules"]
 }
