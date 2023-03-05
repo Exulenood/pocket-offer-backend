@@ -1,3 +1,3 @@
 export default function Home() {
-  return '';
+  return <div>POCKET OFFER BACKEND</div>;
 }

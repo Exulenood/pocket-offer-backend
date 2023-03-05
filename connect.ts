@@ -4,8 +4,8 @@ import postgres from 'postgres';
 config();
 
 export const sql = postgres({
-transform: {
-...postgres.camel,
-undefined: null,
-},
+  transform: {
+    ...postgres.camel,
+    undefined: null,
+  },
 });

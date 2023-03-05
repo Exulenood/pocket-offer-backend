@@ -32,7 +32,8 @@
     //added 2023-03-01:
     "./stylelint.config.cjs",
     //added 2023-03-01:
-    "./migrations/*.mjs"
+    "./migrations/*.mjs",
+    "./next.config.js"
   ],
   "exclude": ["node_modules"]
 }
