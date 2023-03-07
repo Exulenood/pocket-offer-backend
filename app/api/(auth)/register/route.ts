@@ -1,14 +1,14 @@
 import bcrypt from 'bcrypt';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createUser, getUserByName } from '../../../../database/usersDtb';
+import { createUser, getUserAndIdByName } from '../../../../database/usersDtb';
 
 const userLoginSchema = z.object({
   userName: z.string(),
   password: z.string(),
 });
 
-export const POST = async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   const body = await request.json();
   const result = userLoginSchema.safeParse(body);
 
@@ -34,7 +34,7 @@ export const POST = async (request: NextRequest) => {
       { status: 400 },
     );
   }
-  const user = await getUserByName(result.data.userName);
+  const user = await getUserAndIdByName(result.data.userName);
 
   if (user) {
     console.log('Registration Log / Denied: username already exists');
@@ -58,4 +58,4 @@ export const POST = async (request: NextRequest) => {
   console.log(`Registration Log / User ${newUser.userName} was created`);
 
   return NextResponse.json({ user: { username: newUser.userName } });
-};
+}
