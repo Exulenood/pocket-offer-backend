@@ -16,6 +16,18 @@ export async function deleteSessionsByUserId(userId: number) {
   return `Sessions for User Id ${userId} cleaned up`;
 }
 
+export async function deleteSessionsBytokenAndCleanAllExpired(token: string) {
+  await sql`
+    DELETE FROM
+      sessions
+    WHERE
+      token=${token}
+    OR
+      sessions.expiry_timestamp < NOW()
+    `;
+  return 'done';
+}
+
 export async function createSession(
   token: string,
   csrf_secret: string,

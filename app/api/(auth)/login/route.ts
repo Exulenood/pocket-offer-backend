@@ -79,7 +79,9 @@ export async function POST(request: NextRequest) {
   }
 
   const clearedSessions = await deleteSessionsByUserId(userInclPasswordhash.id);
-  console.log(clearedSessions);
+  console.log(
+    `Login Log / ${clearedSessions} after leaving without logging out`,
+  );
 
   const token = crypto.randomBytes(60).toString('base64');
   const csrfSecret = createCsrfSecret();
