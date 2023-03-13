@@ -4,6 +4,7 @@ type Session = {
   id: number;
   csrfSecret: string;
   token: string;
+  userId: number;
 };
 
 export async function deleteSessionsByUserId(userId: number) {
@@ -50,7 +51,8 @@ export async function getValidSessionByToken(token: string) {
   SELECT
     sessions.id,
     sessions.csrf_secret,
-    sessions.token
+    sessions.token,
+    sessions.user_id
   FROM
     sessions
   WHERE

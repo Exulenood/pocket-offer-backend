@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
   const result = userLoginSchema.safeParse(body);
 
   if (!result.success) {
+    console.log(result.error.issues);
     return NextResponse.json(
       {
         error: result.error.issues,
