@@ -3,6 +3,7 @@ export async function up(sql) {
   CREATE TABLE clients(
     id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 23000001),
     user_id integer REFERENCES users(id) ON DELETE CASCADE,
+    client_defined_id integer NOT NULL UNIQUE,
     client_first_name varchar(50) NOT NULL,
     client_last_name varchar(50) NOT NULL,
     client_addr_street varchar(50) NOT NULL,

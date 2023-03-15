@@ -2,27 +2,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
-import { ClientToCreate, createClient } from '../../../../database/clientsDtb';
+import {
+  ClientToCreate,
+  createClient,
+  getClientsByUserId,
+  getMaxClientDefinedIDbyUserId,
+} from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const addClientSchema = z.object({
-  clientFirstName: z.string(),
-  clientLastName: z.string(),
-  clientAddrStreet: z.string(),
-  clientAddrHouseNo: z.string(),
-  clientAddrl2: z.string().optional(),
-  clientAddrPostCode: z.string(),
-  clientAddrLocality: z.string(),
+const getClientSchema = z.object({
+  clientDefinedId: z.string().optional(),
+  clientLastName: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = addClientSchema.safeParse(body);
+  const result = getClientSchema.safeParse(body);
+
   let token;
   let csrfToken;
 
@@ -75,7 +76,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
+  const isCsrfValid = await validateTokenWithSecret(
+    session.csrfSecret,
+    csrfToken,
+  );
 
   if (!isCsrfValid) {
     console.log('Client creation Log / Denied: invalid csrf token');
@@ -101,26 +105,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const clientData: ClientToCreate = {
-    userId: session.userId,
-    clientFirstName: result.data.clientFirstName,
-    clientLastName: result.data.clientLastName,
-    clientAddrStreet: result.data.clientAddrStreet,
-    clientAddrHouseNo: result.data.clientAddrHouseNo,
-    clientAddrl2: result.data.clientAddrl2,
-    clientAddrPostCode: result.data.clientAddrPostCode,
-    clientAddrLocality: result.data.clientAddrLocality,
-  };
+  const clientDefinedIdFilterValue = result.data.clientDefinedId;
+  const clientLastNameFilterValue = result.data.clientLastName;
+  const maxClientDefinedId = await getMaxClientDefinedIDbyUserId(
+    session.userId,
+  );
+  const clients = await getClientsByUserId(
+    session.userId,
+    clientDefinedIdFilterValue,
+    clientLastNameFilterValue,
+  );
 
-  const newClient = await createClient(clientData);
+  // console.log(`ClientDefId Filter: ${clientDefinedIdFilterValue}`);
+  // console.log(`LastName Filter: ${clientLastNameFilterValue}`);
+  // console.log(`MaxclientDefId: ${maxClientDefinedId.max}`);
 
   return NextResponse.json({
-    client: {
-      clientId: newClient.id,
-      clientFirstName: newClient.clientFirstName,
-      clientLastName: newClient.clientLastName,
-      clientAddrPostCode: newClient.clientAddrPostCode,
-      clientAddLocality: newClient.clientAddrLocality,
-    },
+    clients: clients,
+    maxClientDefinedId: maxClientDefinedId.max,
   });
 }
