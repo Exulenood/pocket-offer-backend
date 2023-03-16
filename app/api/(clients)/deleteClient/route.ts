@@ -5,8 +5,8 @@ import { z } from 'zod';
 import {
   ClientToCreate,
   createClient,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
+  deleteClientByIdAndUserId,
+  getClientIdByClientDefinedId,
 } from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
@@ -14,15 +14,14 @@ import {
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const getClientSchema = z.object({
-  clientDefinedId: z.string().optional(),
-  clientLastName: z.string().optional(),
+const deleteClientSchema = z.object({
+  clientId: z.string(),
 });
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = getClientSchema.safeParse(body);
+  const result = deleteClientSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -33,7 +32,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Client Log / Get Request Denied: missing at least one key in auth request header',
+        'Client Log / Deletion denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Client Log / Get Request Denied: Auth request header empty');
+    console.log('Client Log  / Deletion denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Client Log / Get Request Denied: invalid token');
+    console.log('Client Log  / Deletion denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -76,13 +75,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = await validateTokenWithSecret(
-    session.csrfSecret,
-    csrfToken,
-  );
+  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Client Log / Get Request Denied: invalid csrf token');
+    console.log('Client Log  / Deletion denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -94,7 +90,6 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
-
   if (!result.success) {
     console.log(result.error.issues);
     return NextResponse.json(
@@ -105,23 +100,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const clientDefinedIdFilterValue = result.data.clientDefinedId;
-  const clientLastNameFilterValue = result.data.clientLastName;
-  const maxClientDefinedId = await getMaxClientDefinedIDbyUserId(
+  const deleteClient = await deleteClientByIdAndUserId(
+    result.data.clientId,
     session.userId,
-  );
-  const clients = await getClientsByUserId(
-    session.userId,
-    clientDefinedIdFilterValue,
-    clientLastNameFilterValue,
   );
 
-  // console.log(`ClientDefId Filter: ${clientDefinedIdFilterValue}`);
-  // console.log(`LastName Filter: ${clientLastNameFilterValue}`);
-  // console.log(`MaxclientDefId: ${maxClientDefinedId.max}`);
+  console.log(deleteClient);
 
   return NextResponse.json({
-    clients: clients,
-    maxClientDefinedId: maxClientDefinedId.max,
+    isdeleted: true,
   });
 }

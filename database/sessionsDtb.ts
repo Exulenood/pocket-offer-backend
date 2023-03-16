@@ -14,7 +14,7 @@ export async function deleteSessionsByUserId(userId: number) {
     WHERE
       user_id=${userId}
     `;
-  return `Sessions for User Id ${userId} cleaned up`;
+  return `Sessionn for User Id ${userId} cleaned up`;
 }
 
 export async function deleteSessionsBytokenAndCleanAllExpired(token: string) {

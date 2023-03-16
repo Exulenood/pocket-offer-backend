@@ -36,6 +36,18 @@ export async function getMaxClientDefinedIDbyUserId(userId: number) {
   return clientDefinedId;
 }
 
+export async function getClientIdByClientDefinedId(clientDefinedId: string) {
+  const [client] = await sql<{ id: string }[]>`
+    SELECT
+      id
+    FROM
+      clients
+    WHERE
+    client_defined_id=${clientDefinedId}
+    `;
+  return client;
+}
+
 export async function getClientsByUserId(
   userId: number,
   clientDefinedId: string | undefined,
@@ -45,7 +57,15 @@ export async function getClientsByUserId(
     const definedId = parseInt(clientDefinedId);
     const client = await sql`
     SELECT
-      *
+     clients.id,
+     clients.client_defined_id,
+     clients.client_first_name,
+     clients.client_last_name,
+     clients.client_addr_street,
+     clients.client_addr_house_no,
+     clients.client_addr_l2,
+     clients.client_addr_post_code,
+     clients.client_addr_locality
     FROM
       clients
     WHERE
@@ -58,7 +78,15 @@ export async function getClientsByUserId(
   if (clientLastName) {
     const client = await sql`
     SELECT
-      *
+     clients.id,
+     clients.client_defined_id,
+     clients.client_first_name,
+     clients.client_last_name,
+     clients.client_addr_street,
+     clients.client_addr_house_no,
+     clients.client_addr_l2,
+     clients.client_addr_post_code,
+     clients.client_addr_locality
     FROM
       clients
     WHERE
@@ -71,7 +99,15 @@ export async function getClientsByUserId(
 
   const client = await sql`
     SELECT
-      *
+     clients.id,
+     clients.client_defined_id,
+     clients.client_first_name,
+     clients.client_last_name,
+     clients.client_addr_street,
+     clients.client_addr_house_no,
+     clients.client_addr_l2,
+     clients.client_addr_post_code,
+     clients.client_addr_locality
     FROM
       clients
     WHERE
@@ -90,4 +126,16 @@ export async function createClient(clientData: ClientToCreate) {
       *
     `;
   return client;
+}
+
+export async function deleteClientByIdAndUserId(id: string, userId: number) {
+  await sql`
+    DELETE FROM
+      clients
+    WHERE
+      id=${id}
+      AND
+      user_id=${userId}
+    `;
+  return `Client Log / Client ${id} of User ${userId} has been successfully deleted`;
 }

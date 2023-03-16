@@ -2,7 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
-import { ClientToCreate, createClient } from '../../../../database/clientsDtb';
+import {
+  ClientToCreate,
+  createClient,
+  getClientIdByClientDefinedId,
+} from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Client creation Log / Denied: missing at least one key in auth request header',
+        'Client Log / Creation denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Client creation Log / Denied: Auth request header empty');
+    console.log('Client Log  / Creation denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Client creation Log / Denied: invalid token');
+    console.log('Client Log  / Creation denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
   const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Client creation Log / Denied: invalid csrf token');
+    console.log('Client Log  / Creation denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -102,6 +106,23 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+  const doesDefIdExist = await getClientIdByClientDefinedId(
+    result.data.clientDefinedId,
+  );
+
+  if (doesDefIdExist) {
+    console.log('Client Log  / Creation denied: Defined ID already exists')
+    return NextResponse.json(
+      {
+        errors: [
+          {
+            message: 'Existing Defined Id',
+          },
+        ],
+      },
+      { status: 400 },
+    );
+  }
 
   const clientData: ClientToCreate = {
     userId: session.userId,
@@ -116,6 +137,10 @@ export async function POST(request: NextRequest) {
   };
 
   const newClient = await createClient(clientData);
+
+  console.log(
+    `Client Log / Client ${newClient.id} has been successfully created for User ${session.userId}`,
+  );
 
   return NextResponse.json({
     client: {
