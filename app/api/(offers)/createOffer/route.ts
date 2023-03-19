@@ -1,29 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
+import { useState } from 'react';
 import { z } from 'zod';
+import { ClientToCreate, createClient } from '../../../../database/clientsDtb';
 import {
-  ClientToCreate,
-  createClient,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
+  createOffer,
+  getOfferIdByOfferDefinedId,
+  OfferToCreate,
+} from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import { validateTokenWithSecret } from '../../../../utils/csrf';
+import {
+  createTokenFromSecret,
+  validateTokenWithSecret,
+} from '../../../../utils/csrf';
 
-const addClientSchema = z.object({
-  clientDefinedId: z.string(),
-  clientFirstName: z.string(),
-  clientLastName: z.string(),
-  clientAddrStreet: z.string(),
-  clientAddrHouseNo: z.string(),
-  clientAddrL2: z.string().optional(),
-  clientAddrPostCode: z.string(),
-  clientAddrLocality: z.string(),
+const addOfferSchema = z.object({
+  offerTitle: z.string(),
+  offerDefinedId: z.string(),
+  clientId: z.string(),
 });
 
 export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = addClientSchema.safeParse(body);
+  const result = addOfferSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Client Log / Creation denied: missing at least one key in auth request header',
+        'Offer Log / Creation denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Client Log  / Creation denied: Auth request header empty');
+    console.log('Offer Log  / Creation denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Client Log  / Creation denied: invalid token');
+    console.log('Offer Log  / Creation denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
   const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Client Log  / Creation denied: invalid csrf token');
+    console.log('Offer Log  / Creation denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  const doesDefIdExist = await getClientIdByClientDefinedId(
-    result.data.clientDefinedId,
+  const doesDefIdExist = await getOfferIdByOfferDefinedId(
+    result.data.offerDefinedId,
   );
 
   if (doesDefIdExist) {
-    console.log('Client Log  / Creation denied: Defined ID already exists')
+    console.log('Offer Log  / Creation denied: Defined ID already exists');
     return NextResponse.json(
       {
         errors: [
@@ -120,32 +120,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const clientData: ClientToCreate = {
+  const offerData: OfferToCreate = {
     userId: session.userId,
-    clientDefinedId: parseInt(result.data.clientDefinedId),
-    clientFirstName: result.data.clientFirstName,
-    clientLastName: result.data.clientLastName,
-    clientAddrStreet: result.data.clientAddrStreet,
-    clientAddrHouseNo: result.data.clientAddrHouseNo,
-    clientAddrL2: result.data.clientAddrL2,
-    clientAddrPostCode: result.data.clientAddrPostCode,
-    clientAddrLocality: result.data.clientAddrLocality,
+    offerTitle: result.data.offerTitle,
+    offerDefinedId: parseInt(result.data.offerDefinedId),
+    clientId: parseInt(result.data.clientId),
   };
 
-  const newClient = await createClient(clientData);
+  const newOffer = await createOffer(offerData);
 
   console.log(
-    `Client Log / Client ${newClient.id} has been successfully created for User ${session.userId}`,
+    `Offer Log / Offer ${newOffer.id} has been successfully created for Client ${result.data.clientId} (User: ${session.userId})`,
   );
 
   return NextResponse.json({
-    client: {
-      clientId: newClient.id,
-      clientDefinedId: newClient.clientDefinedId,
-      clientFirstName: newClient.clientFirstName,
-      clientLastName: newClient.clientLastName,
-      clientAddrPostCode: newClient.clientAddrPostCode,
-      clientAddLocality: newClient.clientAddrLocality,
+    offer: {
+      newOffer: newOffer.id,
     },
   });
 }

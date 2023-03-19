@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -8,6 +7,7 @@ import {
   getClientsByUserId,
   getMaxClientDefinedIDbyUserId,
 } from '../../../../database/clientsDtb';
+import { getMaxOfferDefinedIDbyUserId } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
@@ -15,8 +15,7 @@ import {
 } from '../../../../utils/csrf';
 
 const getClientSchema = z.object({
-  clientDefinedId: z.string().optional(),
-  clientLastName: z.string().optional(),
+  request: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -33,7 +32,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Client Log / Get Request Denied: missing at least one key in auth request header',
+        'Offer Log / Get Request Denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Client Log / Get Request Denied: Auth request header empty');
+    console.log('Offer Log / Get Request Denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Client Log / Get Request Denied: invalid token');
+    console.log('Offer Log / Get Request Denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -95,34 +94,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!result.success) {
-    console.log(result.error.issues);
-    return NextResponse.json(
-      {
-        error: result.error.issues,
-      },
-      { status: 400 },
-    );
-  }
-
-  const clientDefinedIdFilterValue = result.data.clientDefinedId;
-  const clientLastNameFilterValue = result.data.clientLastName;
-  const maxClientDefinedId = await getMaxClientDefinedIDbyUserId(
-    session.userId,
-  );
-
-  const clients = await getClientsByUserId(
-    session.userId,
-    clientDefinedIdFilterValue,
-    clientLastNameFilterValue,
-  );
+  const maxClientDefinedId = await getMaxOfferDefinedIDbyUserId(session.userId);
 
   // console.log(`ClientDefId Filter: ${clientDefinedIdFilterValue}`);
   // console.log(`LastName Filter: ${clientLastNameFilterValue}`);
   // console.log(`MaxclientDefId: ${maxClientDefinedId.max}`);
 
   return NextResponse.json({
-    clients: clients,
-    maxClientDefinedId: maxClientDefinedId.max,
+    offer: {
+      maxClientDefinedId: maxClientDefinedId.max,
+    },
   });
 }
