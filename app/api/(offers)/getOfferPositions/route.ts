@@ -4,10 +4,12 @@ import { z } from 'zod';
 import {
   ClientToCreate,
   createClient,
+  getClientDefIdAndNamebyId,
   getClientsByUserId,
   getMaxClientDefinedIDbyUserId,
 } from '../../../../database/clientsDtb';
 import {
+  getCreationDateByOfferDefinedId,
   getMaxOfferDefinedIDbyUserId,
   getPositionsByOfferDefIdAndUserId,
   PositionExisting,
@@ -108,13 +110,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const offerPositions: PositionExisting =
-    await getPositionsByOfferDefIdAndUserId(
-      result.data.offerDefinedId,
-      session.userId,
-    );
+  const offerPositions = await getPositionsByOfferDefIdAndUserId(
+    result.data.offerDefinedId,
+    session.userId,
+  );
+  const creationDate = await getCreationDateByOfferDefinedId(
+    result.data.offerDefinedId,
+  );
+  const clientName = await getClientDefIdAndNamebyId(
+    offerPositions[0].clientId,
+  );
 
   return NextResponse.json({
     offerPositions: offerPositions,
+    creationDate: creationDate.toChar,
+    clientName: `${clientName.clientFirstName} ${clientName.clientLastName}`,
   });
 }
+// offerPositions[0].client_id
+// ${clientName.clientFirstName} ${clientName.clientLastName}

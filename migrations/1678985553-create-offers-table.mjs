@@ -10,7 +10,7 @@ export async function up(sql) {
     quantity integer,
     quantity_unit varchar(20),
     position_is_optional boolean NOT NULL,
-    item_id integer,
+    item_id varchar (50),
     item_title varchar (50),
     item_text varchar (280),
     item_sales_price decimal,

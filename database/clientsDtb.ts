@@ -25,6 +25,12 @@ type ClientExisting = {
   clientAddrLocality: string;
 };
 
+type ClientDefIdAndNameReturn = {
+  clientDefinedId: number;
+  clientFirstName: string;
+  clientLastName: string;
+};
+
 export async function getMaxClientDefinedIDbyUserId(userId: number) {
   const [clientDefinedId] = await sql<{ max: number }[]>`
   SELECT MAX (client_defined_id)
@@ -44,6 +50,20 @@ export async function getClientIdByClientDefinedId(clientDefinedId: string) {
       clients
     WHERE
     client_defined_id=${clientDefinedId}
+    `;
+  return client;
+}
+
+export async function getClientDefIdAndNamebyId(clientId: string) {
+  const [client] = await sql<ClientDefIdAndNameReturn[]>`
+    SELECT
+    client_defined_id,
+    client_first_name,
+    client_last_name
+    FROM
+      clients
+    WHERE
+    id=${clientId}
     `;
   return client;
 }
