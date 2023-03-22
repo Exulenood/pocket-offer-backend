@@ -7,6 +7,24 @@ export type OfferToCreate = {
   clientId: number;
 };
 
+export type PositionToAdd = {
+  userId: number;
+  clientId: number;
+  offerDefinedId: string;
+  offerTitle: string;
+  positionId: string;
+  quantity: number;
+  quantityUnit: string;
+  positionIsOptional: boolean;
+  itemId: string | null;
+  itemTitle: string;
+  itemText: string;
+  itemSalesPrice: number;
+  itemSalesDiscount: number | null;
+  itemCost: number;
+  itemIsModified: boolean;
+};
+
 export type PositionToEdit = {
   offerRowId: string;
   positionId: string;
@@ -57,6 +75,17 @@ export async function getMaxOfferDefinedIDbyUserId(userId: number) {
     user_id=${userId}
     `;
   return offerDefinedId;
+}
+
+export async function getMaxPosIdByOfferDefinedId(offerDefinedId: string) {
+  const [positionId] = await sql<{ max: number }[]>`
+  SELECT MAX (position_id)
+  FROM
+    offers
+  WHERE
+    offer_defined_id=${offerDefinedId}
+    `;
+  return positionId;
 }
 
 export async function getCreationDateByOfferDefinedId(offerDefinedId: string) {
@@ -121,6 +150,30 @@ export async function getOfferIdByOfferDefinedId(offerDefinedId: string) {
   return offer;
 }
 
+export async function getClientIdbyOfferDefId(offerDefinedId: string) {
+  const [client] = await sql<{ ClientId: number }[]>`
+    SELECT
+    client_id
+    FROM
+      offers
+    WHERE
+    offer_defined_id=${offerDefinedId}
+    `;
+  return client;
+}
+
+export async function getOfferTitlebyOfferDefId(offerDefinedId: string) {
+  const [title] = await sql<{ offerTitle: string }[]>`
+    SELECT
+    offer_title
+    FROM
+      offers
+    WHERE
+    offer_defined_id=${offerDefinedId}
+    `;
+  return title;
+}
+
 export async function getPositionIdByOfferRowId(offerRowId: string) {
   const [offerPositionId] = await sql<{ positionId: string }[]>`
     SELECT
@@ -143,6 +196,20 @@ export async function createOffer(offerData: OfferToCreate) {
       id
     `;
   return offer;
+}
+
+// ------------------------------------------------
+
+export async function addPosition(positionData: PositionToAdd) {
+  const [position] = await sql<{ id: string }[]>`
+    INSERT INTO offers
+      (user_id, client_id, offer_defined_id, offer_title,position_id,quantity,quantity_unit,position_is_optional,item_id,item_title,item_text,item_sales_price,item_sales_discount,item_cost,item_is_modified,created_at)
+    VALUES
+      (${positionData.userId},${positionData.clientId},${positionData.offerDefinedId},${positionData.offerTitle},${positionData.positionId},${positionData.quantity},${positionData.quantityUnit},${positionData.positionIsOptional},${positionData.itemId},${positionData.itemTitle},${positionData.itemText},${positionData.itemSalesPrice},${positionData.itemSalesDiscount},${positionData.itemCost},${positionData.itemIsModified},current_date)
+    RETURNING
+      id
+    `;
+  return position;
 }
 
 export async function updatePositionByOfferRowId(positionData: PositionToEdit) {

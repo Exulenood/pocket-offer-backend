@@ -1,34 +1,27 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
 import {
   ClientToCreate,
   createClient,
-  getClientDefIdAndNamebyId,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
+  deleteClientByIdAndUserId,
+  getClientIdByClientDefinedId,
 } from '../../../../database/clientsDtb';
-import {
-  getCreationDateByOfferDefinedId,
-  getMaxOfferDefinedIDbyUserId,
-  getMaxPosIdByOfferDefinedId,
-  getPositionsByOfferDefIdAndUserId,
-  PositionExisting,
-} from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const getClientSchema = z.object({
-  offerDefinedId: z.string(),
+const deleteClientSchema = z.object({
+  clientId: z.string(),
 });
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = getClientSchema.safeParse(body);
+  const result = deleteClientSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -39,7 +32,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Offer Log / Get Request Denied: missing at least one key in auth request header',
+        'Client Log / Deletion denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -53,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Offer Log / Get Request Denied: Auth request header empty');
+    console.log('Client Log  / Deletion denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -69,7 +62,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Offer Log / Get Request Denied: invalid token');
+    console.log('Client Log  / Deletion denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -82,13 +75,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = await validateTokenWithSecret(
-    session.csrfSecret,
-    csrfToken,
-  );
+  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Offer Log / Get Request Denied: invalid csrf token');
+    console.log('Client Log  / Deletion denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -100,7 +90,6 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
-
   if (!result.success) {
     console.log(result.error.issues);
     return NextResponse.json(
@@ -111,26 +100,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const offerPositions = await getPositionsByOfferDefIdAndUserId(
-    result.data.offerDefinedId,
+  const deleteClient = await deleteClientByIdAndUserId(
+    result.data.clientId,
     session.userId,
   );
-  const creationDate = await getCreationDateByOfferDefinedId(
-    result.data.offerDefinedId,
-  );
-  const clientName = await getClientDefIdAndNamebyId(
-    offerPositions[0].clientId,
-  );
-  const maxExistingPosId = await getMaxPosIdByOfferDefinedId(
-    result.data.offerDefinedId,
-  );
+
+  console.log(deleteClient);
 
   return NextResponse.json({
-    offerPositions: offerPositions,
-    creationDate: creationDate.toChar,
-    clientName: `${clientName.clientFirstName} ${clientName.clientLastName}`,
-    maxExistingPosId: maxExistingPosId,
+    isdeleted: true,
   });
 }
-// offerPositions[0].client_id
-// ${clientName.clientFirstName} ${clientName.clientLastName}
