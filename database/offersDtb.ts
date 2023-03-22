@@ -151,7 +151,7 @@ export async function getOfferIdByOfferDefinedId(offerDefinedId: string) {
 }
 
 export async function getClientIdbyOfferDefId(offerDefinedId: string) {
-  const [client] = await sql<{ ClientId: number }[]>`
+  const [client] = await sql<{ clientId: number }[]>`
     SELECT
     client_id
     FROM
@@ -184,6 +184,30 @@ export async function getPositionIdByOfferRowId(offerRowId: string) {
       id=${offerRowId}
     `;
   return offerPositionId;
+}
+
+export async function getOfferDefIdByOfferRowId(offerRowId: string) {
+  const [offer] = await sql<{ offerDefinedId: string }[]>`
+    SELECT
+      offers.offer_defined_id
+    FROM
+      offers
+    WHERE
+      id=${offerRowId}
+    `;
+  return offer;
+}
+
+export async function getAmountOfRowsByOfferDefinedId(offerDefinedId: string) {
+  const [offer] = await sql`
+    SELECT
+      COUNT(*)
+    FROM
+      offers
+    WHERE
+      offer_defined_id=${offerDefinedId}
+    `;
+  return offer;
 }
 
 export async function createOffer(offerData: OfferToCreate) {
@@ -235,4 +259,39 @@ export async function updatePositionByOfferRowId(positionData: PositionToEdit) {
       item_title
     `;
   return position;
+}
+
+export async function resetPositionByOfferRowId(id: string, userId: number) {
+  await sql`
+    UPDATE offers
+    SET position_id = '10',
+        quantity = null,
+        quantity_unit = null,
+        position_is_optional = false,
+        item_id = null,
+        item_title = null,
+        item_text = 'Press to edit the first item',
+        item_sales_price = null,
+        item_sales_discount = null,
+        item_cost = null,
+        item_is_modified = false
+  	WHERE
+        id=${id}
+    `;
+  return `Offer Log / OfferRow ${id} of User ${userId} has been successfully set back`;
+}
+
+export async function deletePositionByRowIdAndUserId(
+  id: string,
+  userId: number,
+) {
+  await sql`
+    DELETE FROM
+      offers
+    WHERE
+      id=${id}
+      AND
+      user_id=${userId}
+    `;
+  return `Offer Log / OfferRow ${id} of User ${userId} has been successfully deleted`;
 }

@@ -3,25 +3,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
 import {
-  ClientToCreate,
-  createClient,
-  deleteClientByIdAndUserId,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
+  deletePositionByRowIdAndUserId,
+  getAmountOfRowsByOfferDefinedId,
+  getOfferDefIdByOfferRowId,
+  resetPositionByOfferRowId,
+} from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const deleteClientSchema = z.object({
-  clientId: z.string(),
+const deletePositionSchema = z.object({
+  offerRowId: z.string(),
 });
 
 export async function DELETE(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = deleteClientSchema.safeParse(body);
+  const result = deletePositionSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -100,12 +100,27 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const deleteClient = await deleteClientByIdAndUserId(
-    result.data.clientId,
-    session.userId,
+  const offerDefinedId = await getOfferDefIdByOfferRowId(
+    result.data.offerRowId,
   );
 
-  console.log(deleteClient);
+  const amountOfRows = await getAmountOfRowsByOfferDefinedId(
+    offerDefinedId.offerDefinedId,
+  );
+
+  if (amountOfRows.count === '1') {
+    const setbackPosition = await resetPositionByOfferRowId(
+      result.data.offerRowId,
+      session.userId,
+    );
+    console.log(setbackPosition);
+  } else {
+    const deletePosition = await deletePositionByRowIdAndUserId(
+      result.data.offerRowId,
+      session.userId,
+    );
+    console.log(deletePosition);
+  }
 
   return NextResponse.json({
     isdeleted: true,

@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 
   const positionData: PositionToAdd = {
     userId: session.userId,
-    clientId: clientId.ClientId,
+    clientId: clientId.clientId,
     offerDefinedId: result.data.offerDefinedId,
     offerTitle: offerTitle.offerTitle,
     positionId: result.data.positionId,
