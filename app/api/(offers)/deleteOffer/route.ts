@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
 import {
+  deleteOfferByDefIdAndUserId,
   deletePositionByRowIdAndUserId,
   getAmountOfRowsByOfferDefinedId,
   getOfferDefIdByOfferRowId,
@@ -14,14 +15,14 @@ import {
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const deletePositionSchema = z.object({
-  offerRowId: z.string(),
+const deleteOfferSchema = z.object({
+  offerDefinedId: z.string(),
 });
 
 export async function DELETE(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = deletePositionSchema.safeParse(body);
+  const result = deleteOfferSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -100,27 +101,12 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const offerDefinedId = await getOfferDefIdByOfferRowId(
-    result.data.offerRowId,
+  const deleteOffer = await deleteOfferByDefIdAndUserId(
+    result.data.offerDefinedId,
+    session.userId,
   );
 
-  const amountOfRows = await getAmountOfRowsByOfferDefinedId(
-    offerDefinedId.offerDefinedId,
-  );
-
-  if (amountOfRows.count === '1') {
-    const setbackPosition = await resetPositionByOfferRowId(
-      result.data.offerRowId,
-      session.userId,
-    );
-    console.log(setbackPosition);
-  } else {
-    const deletePosition = await deletePositionByRowIdAndUserId(
-      result.data.offerRowId,
-      session.userId,
-    );
-    console.log(deletePosition);
-  }
+  console.log(deleteOffer);
 
   return NextResponse.json({
     isdeleted: true,

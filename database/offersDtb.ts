@@ -7,6 +7,15 @@ export type OfferToCreate = {
   clientId: number;
 };
 
+export type GetOffersReturn = {
+  offerDefinedId: number;
+  offerTitle: string;
+  clientId: string;
+  dateOfCreation: any;
+  clientFirstName: string;
+  clientLastName: string;
+};
+
 export type PositionToAdd = {
   userId: number;
   clientId: number;
@@ -65,6 +74,22 @@ export type PositionExisting = {
   itemIsModified: boolean | undefined | null;
   createdAt: string;
 };
+
+export async function getOffersByUserId(userId: number) {
+  const offers = await sql<GetOffersReturn[]>`
+  SELECT
+    DISTINCT ON (offer_defined_id) offer_defined_id, offer_title, client_id
+  FROM
+    offers
+  WHERE
+    user_id = ${userId}
+  ORDER BY
+    offer_defined_id,
+    offer_title,
+    client_id
+    `;
+  return offers;
+}
 
 export async function getMaxOfferDefinedIDbyUserId(userId: number) {
   const [offerDefinedId] = await sql<{ max: number }[]>`
@@ -294,4 +319,19 @@ export async function deletePositionByRowIdAndUserId(
       user_id=${userId}
     `;
   return `Offer Log / OfferRow ${id} of User ${userId} has been successfully deleted`;
+}
+
+export async function deleteOfferByDefIdAndUserId(
+  offerDefinedId: string,
+  userId: number,
+) {
+  await sql`
+    DELETE FROM
+      offers
+    WHERE
+      offer_defined_id=${offerDefinedId}
+      AND
+      user_id=${userId}
+    `;
+  return `Offer Log / Offer ${offerDefinedId} of User ${userId} has been successfully deleted`;
 }

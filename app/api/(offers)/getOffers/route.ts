@@ -2,11 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
+import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
 import {
-  deletePositionByRowIdAndUserId,
-  getAmountOfRowsByOfferDefinedId,
-  getOfferDefIdByOfferRowId,
-  resetPositionByOfferRowId,
+  getCreationDateByOfferDefinedId,
+  getOffersByUserId,
+  GetOffersReturn,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
@@ -14,14 +14,14 @@ import {
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const deletePositionSchema = z.object({
-  offerRowId: z.string(),
+const getOffersSchema = z.object({
+  getAmount: z.string(),
 });
 
-export async function DELETE(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = deletePositionSchema.safeParse(body);
+  const result = getOffersSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -32,7 +32,7 @@ export async function DELETE(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Offer Log / Deletion denied: missing at least one key in auth request header',
+        'Client Log / Get Request Denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -46,7 +46,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
   } else {
-    console.log('Offer Log  / Deletion denied: Auth request header empty');
+    console.log('Client Log / Get Request Denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -62,7 +62,7 @@ export async function DELETE(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Offer Log  / Deletion denied: invalid token');
+    console.log('Client Log / Get Request Denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -75,10 +75,13 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
+  const isCsrfValid = await validateTokenWithSecret(
+    session.csrfSecret,
+    csrfToken,
+  );
 
   if (!isCsrfValid) {
-    console.log('Offer Log  / Deletion denied: invalid csrf token');
+    console.log('Client Log / Get Request Denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -90,6 +93,7 @@ export async function DELETE(request: NextRequest) {
       { status: 401 },
     );
   }
+
   if (!result.success) {
     console.log(result.error.issues);
     return NextResponse.json(
@@ -100,29 +104,22 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const offerDefinedId = await getOfferDefIdByOfferRowId(
-    result.data.offerRowId,
-  );
+  const offers = await getOffersByUserId(session.userId);
 
-  const amountOfRows = await getAmountOfRowsByOfferDefinedId(
-    offerDefinedId.offerDefinedId,
-  );
-
-  if (amountOfRows.count === '1') {
-    const setbackPosition = await resetPositionByOfferRowId(
-      result.data.offerRowId,
-      session.userId,
-    );
-    console.log(setbackPosition);
-  } else {
-    const deletePosition = await deletePositionByRowIdAndUserId(
-      result.data.offerRowId,
-      session.userId,
-    );
-    console.log(deletePosition);
+  async function addClientNameAndDate(rawOffers: GetOffersReturn[]) {
+    for (const offer of rawOffers) {
+      const date = await getCreationDateByOfferDefinedId(
+        offer.offerDefinedId.toString(),
+      );
+      const client = await getClientDefIdAndNamebyId(offer.clientId);
+      offer.dateOfCreation = date.toChar;
+      offer.clientFirstName = client.clientFirstName;
+      offer.clientLastName = client.clientLastName;
+    }
   }
+  await addClientNameAndDate(offers);
 
   return NextResponse.json({
-    isdeleted: true,
+    offers: offers,
   });
 }
