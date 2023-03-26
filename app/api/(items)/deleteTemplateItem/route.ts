@@ -2,26 +2,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
-import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
-import {
-  getCreationDateByOfferDefinedId,
-  getOffersByUserId,
-  GetOffersReturn,
-} from '../../../../database/offersDtb';
+import { deleteTemplateItemByRowIdAndUserId } from '../../../../database/itemTemplatesDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
   createTokenFromSecret,
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const getOffersSchema = z.object({
-  getAmount: z.string(),
+const deleteTemplateItemSchema = z.object({
+  templateItemRowId: z.number(),
 });
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = getOffersSchema.safeParse(body);
+  const result = deleteTemplateItemSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -32,7 +27,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Offers Log / Get Request Denied: missing at least one key in auth request header',
+        'Template Log / Deletion denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -46,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Offers Log / Get Request Denied: Auth request header empty');
+    console.log('Template Log  / Deletion denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -62,7 +57,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Offers Log / Get Request Denied: invalid token');
+    console.log('Template Log  / Deletion denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -75,13 +70,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = await validateTokenWithSecret(
-    session.csrfSecret,
-    csrfToken,
-  );
+  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Offers Log / Get Request Denied: invalid csrf token');
+    console.log('Template Log  / Deletion denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -93,7 +85,6 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
-
   if (!result.success) {
     console.log(result.error.issues);
     return NextResponse.json(
@@ -104,22 +95,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const offers = await getOffersByUserId(session.userId);
-
-  async function addClientNameAndDate(rawOffers: GetOffersReturn[]) {
-    for (const offer of rawOffers) {
-      const date = await getCreationDateByOfferDefinedId(
-        offer.offerDefinedId.toString(),
-      );
-      const client = await getClientDefIdAndNamebyId(offer.clientId);
-      offer.dateOfCreation = date.toChar;
-      offer.clientFirstName = client.clientFirstName;
-      offer.clientLastName = client.clientLastName;
-    }
-  }
-  await addClientNameAndDate(offers);
+  const deletePosition = await deleteTemplateItemByRowIdAndUserId(
+    result.data.templateItemRowId,
+    session.userId,
+  );
+  console.log(deletePosition);
 
   return NextResponse.json({
-    offers: offers,
+    isdeleted: true,
   });
 }

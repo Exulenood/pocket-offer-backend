@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { useState } from 'react';
 import { z } from 'zod';
-import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
+import { getItemsByUserId } from '../../../../database/itemTemplatesDtb';
 import {
   getCreationDateByOfferDefinedId,
   getOffersByUserId,
@@ -14,14 +14,14 @@ import {
   validateTokenWithSecret,
 } from '../../../../utils/csrf';
 
-const getOffersSchema = z.object({
+const getTemplateItemsSchema = z.object({
   getAmount: z.string(),
 });
 
 export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = getOffersSchema.safeParse(body);
+  const result = getTemplateItemsSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Offers Log / Get Request Denied: missing at least one key in auth request header',
+        'Template Log / Get Request Denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Offers Log / Get Request Denied: Auth request header empty');
+    console.log('Template Log / Get Request Denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Offers Log / Get Request Denied: invalid token');
+    console.log('Template Log / Get Request Denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   );
 
   if (!isCsrfValid) {
-    console.log('Offers Log / Get Request Denied: invalid csrf token');
+    console.log('Template Log / Get Request Denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -104,22 +104,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const offers = await getOffersByUserId(session.userId);
-
-  async function addClientNameAndDate(rawOffers: GetOffersReturn[]) {
-    for (const offer of rawOffers) {
-      const date = await getCreationDateByOfferDefinedId(
-        offer.offerDefinedId.toString(),
-      );
-      const client = await getClientDefIdAndNamebyId(offer.clientId);
-      offer.dateOfCreation = date.toChar;
-      offer.clientFirstName = client.clientFirstName;
-      offer.clientLastName = client.clientLastName;
-    }
-  }
-  await addClientNameAndDate(offers);
+  const items = await getItemsByUserId(session.userId);
 
   return NextResponse.json({
-    offers: offers,
+    templateItems: items,
   });
 }

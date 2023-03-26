@@ -1,27 +1,39 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
 import {
-  getCreationDateByOfferDefinedId,
-  getOffersByUserId,
-  GetOffersReturn,
+  ClientToCreate,
+  createClient,
+  getClientIdByClientDefinedId,
+} from '../../../../database/clientsDtb';
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { addItem, ItemToAdd } from '../../../../database/itemTemplatesDtb';
+import {
+  addPosition,
+  createOffer,
+  getClientIdbyOfferDefId,
+  getOfferIdByOfferDefinedId,
+  getOfferTitlebyOfferDefId,
+  getPositionIdByOfferRowId,
+  OfferToCreate,
+  PositionToAdd,
+  PositionToEdit,
+  updatePositionByOfferRowId,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
-const getOffersSchema = z.object({
-  getAmount: z.string(),
+const addPositionSchema = z.object({
+  itemId: z.string(),
+  itemTitle: z.string(),
+  itemText: z.string(),
+  itemSalesPrice: z.number(),
+  itemCost: z.number(),
 });
 
 export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
-  const result = getOffersSchema.safeParse(body);
+  const result = addPositionSchema.safeParse(body);
 
   let token;
   let csrfToken;
@@ -32,7 +44,7 @@ export async function POST(request: NextRequest) {
       csrfToken = JSON.parse(getKeys).keyB;
     } else {
       console.log(
-        'Offers Log / Get Request Denied: missing at least one key in auth request header',
+        'Template Log / Creation denied: missing at least one key in auth request header',
       );
       return NextResponse.json(
         {
@@ -46,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    console.log('Offers Log / Get Request Denied: Auth request header empty');
+    console.log('Template Log  / Creation denied: Auth request header empty');
     return NextResponse.json(
       {
         errors: [
@@ -62,7 +74,7 @@ export async function POST(request: NextRequest) {
   const session = await getValidSessionByToken(token);
 
   if (!session) {
-    console.log('Offers Log / Get Request Denied: invalid token');
+    console.log('Template Log  / Creation denied: invalid token');
     return NextResponse.json(
       {
         errors: [
@@ -75,13 +87,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isCsrfValid = await validateTokenWithSecret(
-    session.csrfSecret,
-    csrfToken,
-  );
+  const isCsrfValid = validateTokenWithSecret(session.csrfSecret, csrfToken);
 
   if (!isCsrfValid) {
-    console.log('Offers Log / Get Request Denied: invalid csrf token');
+    console.log('Template Log  / Creation denied: invalid csrf token');
     return NextResponse.json(
       {
         errors: [
@@ -104,22 +113,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const offers = await getOffersByUserId(session.userId);
+  const itemData: ItemToAdd = {
+    userId: session.userId,
+    itemId: result.data.itemId,
+    itemTitle: result.data.itemTitle,
+    itemText: result.data.itemText,
+    itemSalesPrice: result.data.itemSalesPrice,
+    itemCost: result.data.itemCost,
+  };
 
-  async function addClientNameAndDate(rawOffers: GetOffersReturn[]) {
-    for (const offer of rawOffers) {
-      const date = await getCreationDateByOfferDefinedId(
-        offer.offerDefinedId.toString(),
-      );
-      const client = await getClientDefIdAndNamebyId(offer.clientId);
-      offer.dateOfCreation = date.toChar;
-      offer.clientFirstName = client.clientFirstName;
-      offer.clientLastName = client.clientLastName;
-    }
-  }
-  await addClientNameAndDate(offers);
+  const addedItem = await addItem(itemData);
+
+  console.log(
+    `Template Log / Item ${itemData.itemTitle} has been sucessfully added for User ${session.userId}`,
+  );
 
   return NextResponse.json({
-    offers: offers,
+    isAdded: true,
+    newTemplateItemRow: addedItem.id,
   });
 }
