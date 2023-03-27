@@ -13,7 +13,9 @@ export async function up(sql) {
     user_addr_l2 varchar(80),
     user_post_code varchar(8),
     user_location varchar(30),
-    user_logo_file varchar(80)
+    user_logo_file varchar(80),
+    user_email varchar(80),
+    user_phone varchar(80)
   )`;
 }
 

@@ -30,6 +30,8 @@ export async function getItemsByUserId(userId: number) {
     template_items
   WHERE
     user_id = ${userId}
+  ORDER BY
+    item_id ASC
     `;
   return offers;
 }
