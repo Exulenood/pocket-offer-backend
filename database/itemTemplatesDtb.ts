@@ -18,7 +18,7 @@ export type ItemToAdd = {
 };
 
 export async function getItemsByUserId(userId: number) {
-  const offers = await sql<GetItemsReturn[]>`
+  const items = await sql<GetItemsReturn[]>`
   SELECT
    id,
    item_id,
@@ -33,7 +33,7 @@ export async function getItemsByUserId(userId: number) {
   ORDER BY
     item_id ASC
     `;
-  return offers;
+  return items;
 }
 
 export async function addItem(itemData: ItemToAdd) {

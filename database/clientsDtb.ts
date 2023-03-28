@@ -25,6 +25,17 @@ type ClientExisting = {
   clientAddrLocality: string;
 };
 
+export type ClientData = {
+  clientDefinedId: number;
+  clientFirstName: string;
+  clientLastName: string;
+  clientAddrStreet: string;
+  clientAddrHouseNo: string;
+  clientAddrL2: any;
+  clientAddrPostCode: string;
+  clientAddrLocality: string;
+};
+
 type ClientDefIdAndNameReturn = {
   clientDefinedId: number;
   clientFirstName: string;
@@ -60,6 +71,25 @@ export async function getClientDefIdAndNamebyId(clientId: string) {
     client_defined_id,
     client_first_name,
     client_last_name
+    FROM
+      clients
+    WHERE
+    id=${clientId}
+    `;
+  return client;
+}
+
+export async function getClientDataById(clientId: number) {
+  const [client] = await sql<ClientData[]>`
+    SELECT
+    client_defined_id,
+    client_first_name,
+    client_last_name,
+    client_addr_street,
+    client_addr_house_no,
+    client_addr_l2,
+    client_addr_post_code,
+    client_addr_locality
     FROM
       clients
     WHERE
