@@ -1,18 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  ClientToCreate,
-  createClient,
-  deleteClientByIdAndUserId,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
+import { deleteClientByIdAndUserId } from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const deleteClientSchema = z.object({
   clientId: z.string(),

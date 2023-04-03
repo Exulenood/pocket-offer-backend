@@ -1,18 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  ClientToCreate,
-  createClient,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
-} from '../../../../database/clientsDtb';
 import { getMaxOfferDefinedIDbyUserId } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getClientSchema = z.object({
   request: z.string().optional(),
@@ -22,6 +13,10 @@ export async function POST(request: NextRequest) {
   const getKeys = await request.headers.get('Authorization');
   const body = await request.json();
   const result = getClientSchema.safeParse(body);
+
+  if (result) {
+    console.log(result);
+  }
 
   let token;
   let csrfToken;
@@ -95,10 +90,6 @@ export async function POST(request: NextRequest) {
   }
 
   const maxClientDefinedId = await getMaxOfferDefinedIDbyUserId(session.userId);
-
-  // console.log(`ClientDefId Filter: ${clientDefinedIdFilterValue}`);
-  // console.log(`LastName Filter: ${clientLastNameFilterValue}`);
-  // console.log(`MaxclientDefId: ${maxClientDefinedId.max}`);
 
   return NextResponse.json({
     offer: {

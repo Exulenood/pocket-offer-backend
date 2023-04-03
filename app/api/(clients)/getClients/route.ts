@@ -1,18 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
 import {
-  ClientToCreate,
-  createClient,
   getClientsByUserId,
   getMaxClientDefinedIDbyUserId,
 } from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getClientSchema = z.object({
   clientDefinedId: z.string().optional(),
@@ -116,10 +110,6 @@ export async function POST(request: NextRequest) {
     clientDefinedIdFilterValue,
     clientLastNameFilterValue,
   );
-
-  // console.log(`ClientDefId Filter: ${clientDefinedIdFilterValue}`);
-  // console.log(`LastName Filter: ${clientLastNameFilterValue}`);
-  // console.log(`MaxclientDefId: ${maxClientDefinedId.max}`);
 
   return NextResponse.json({
     clients: clients,

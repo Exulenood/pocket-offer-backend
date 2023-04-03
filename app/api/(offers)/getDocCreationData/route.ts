@@ -1,22 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  ClientData,
-  ClientToCreate,
-  createClient,
-  getClientDataById,
-  getClientDefIdAndNamebyId,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
-} from '../../../../database/clientsDtb';
+import { ClientData, getClientDataById } from '../../../../database/clientsDtb';
 import {
   getClientIdbyOfferDefId,
   getCreationDateByOfferDefinedId,
-  getMaxOfferDefinedIDbyUserId,
-  getMaxPosIdByOfferDefinedId,
   getPositionsByOfferDefIdAndUserId,
-  PositionExisting,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import {
@@ -24,10 +13,7 @@ import {
   GetTermsReturn,
 } from '../../../../database/termsTemplatesDtb';
 import { getUserDatabyId, UserData } from '../../../../database/usersDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getDocCreationDataSchema = z.object({
   offerDefinedId: z.string(),

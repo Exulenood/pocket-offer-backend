@@ -1,18 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import { ClientToCreate, createClient } from '../../../../database/clientsDtb';
 import {
   createOffer,
   getOfferIdByOfferDefinedId,
   OfferToCreate,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const addOfferSchema = z.object({
   offerTitle: z.string(),

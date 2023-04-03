@@ -1,19 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  ClientToCreate,
-  createClient,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
-} from '../../../../database/clientsDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import { getUserDatabyId, UserData } from '../../../../database/usersDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getUserSchema = z.object({
   getDetails: z.string(),

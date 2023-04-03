@@ -1,19 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  deleteOfferByDefIdAndUserId,
-  deletePositionByRowIdAndUserId,
-  getAmountOfRowsByOfferDefinedId,
-  getOfferDefIdByOfferRowId,
-  resetPositionByOfferRowId,
-} from '../../../../database/offersDtb';
+import { deleteOfferByDefIdAndUserId } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const deleteOfferSchema = z.object({
   offerDefinedId: z.string(),

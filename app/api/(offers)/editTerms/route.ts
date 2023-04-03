@@ -1,19 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import {
-  ClientToCreate,
-  createClient,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
-import {
-  createOffer,
-  getOfferIdByOfferDefinedId,
-  getPositionIdByOfferRowId,
-  OfferToCreate,
-  PositionToEdit,
-  updatePositionByOfferRowId,
-} from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import { updateTermByUserId } from '../../../../database/termsTemplatesDtb';
 import { validateTokenWithSecret } from '../../../../utils/csrf';

@@ -1,38 +1,64 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# POCKET OFFER BACKEND
 
-## Getting Started
+### Description
 
-First, run the development server:
+Pocket Offer Backend provides all necessary API-Endpoints and Database-Management for the Smartphone Application Pocket Offer (https://github.com/Exulenood/pocket-offer.git).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+### Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Session Management: Login, Logout and Revalidation routes
+- Authorisation Checks for two separately issued Tokens at all API Endpoints (therefore all Get-Requests are handled with POST instead).
+- Add, Store and retrieve User Data to/from database "users"
+- Add, Store and retrieve Client Data to/from database "clients"
+- Add, Store and retrieve Item Template Data to/from database "itemTemplates"
+- Add, Store and retrieve Offer Data to/from database "offers"
+- Add, Store and retrieve Terms Data to/from database "termsTemplates"
+- Retrieve all necessary data for document creation from all databases with a single API Endpoint
+- Database migration setup with ley
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Technologies
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- Next.js 13
+- PostgreSQL
+- TypeScript
+- JavaScript
+- CSS
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### List of API Endpoints
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+##### Auth
 
-## Learn More
+- login (POST)
+- logout (POST)
+- register (POST)
+- revalidate (POST)
 
-To learn more about Next.js, take a look at the following resources:
+##### Clients
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- createClient (POST)
+- deleteClient (DELETE)
+- getClients (POST)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+##### Items
 
-## Deploy on Vercel
+- addTemplateItem (POST)
+- deleteTemplateItem (DELETE)
+- getTemplateItem (POST)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+##### Offers
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- addPosition (POST)
+- createOffer (POST)
+- deleteOffer (DELETE)
+- deletePosition (DELETE)
+- editPosition (PUT)
+- editTerms (PUT)
+- getDocCreationData (POST)
+- getMaxOfferId (POST)
+- getOfferPositions (POST)
+- getOffers (POST)
+
+##### Users
+
+- editUser (PUT)
+- getUser (POST)

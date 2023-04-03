@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
 import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
 import {
@@ -9,10 +8,7 @@ import {
   GetOffersReturn,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getOffersSchema = z.object({
   getAmount: z.string(),

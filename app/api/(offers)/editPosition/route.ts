@@ -2,15 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  ClientToCreate,
-  createClient,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
-import {
-  createOffer,
-  getOfferIdByOfferDefinedId,
   getPositionIdByOfferRowId,
-  OfferToCreate,
   PositionToEdit,
   updatePositionByOfferRowId,
 } from '../../../../database/offersDtb';

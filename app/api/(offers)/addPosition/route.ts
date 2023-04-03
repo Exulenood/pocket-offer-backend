@@ -2,21 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  ClientToCreate,
-  createClient,
-  getClientIdByClientDefinedId,
-} from '../../../../database/clientsDtb';
-import {
   addPosition,
-  createOffer,
   getClientIdbyOfferDefId,
-  getOfferIdByOfferDefinedId,
   getOfferTitlebyOfferDefId,
-  getPositionIdByOfferRowId,
-  OfferToCreate,
   PositionToAdd,
-  PositionToEdit,
-  updatePositionByOfferRowId,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
 import { validateTokenWithSecret } from '../../../../utils/csrf';

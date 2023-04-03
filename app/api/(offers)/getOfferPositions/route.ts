@@ -1,25 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { NextRequest, NextResponse } from 'next/server';
-import { useState } from 'react';
 import { z } from 'zod';
-import {
-  ClientToCreate,
-  createClient,
-  getClientDefIdAndNamebyId,
-  getClientsByUserId,
-  getMaxClientDefinedIDbyUserId,
-} from '../../../../database/clientsDtb';
+import { getClientDefIdAndNamebyId } from '../../../../database/clientsDtb';
 import {
   getCreationDateByOfferDefinedId,
-  getMaxOfferDefinedIDbyUserId,
   getMaxPosIdByOfferDefinedId,
   getPositionsByOfferDefIdAndUserId,
-  PositionExisting,
 } from '../../../../database/offersDtb';
 import { getValidSessionByToken } from '../../../../database/sessionsDtb';
-import {
-  createTokenFromSecret,
-  validateTokenWithSecret,
-} from '../../../../utils/csrf';
+import { validateTokenWithSecret } from '../../../../utils/csrf';
 
 const getClientSchema = z.object({
   offerDefinedId: z.string(),
@@ -132,5 +121,3 @@ export async function POST(request: NextRequest) {
     maxExistingPosId: maxExistingPosId,
   });
 }
-// offerPositions[0].client_id
-// ${clientName.clientFirstName} ${clientName.clientLastName}
